@@ -55,7 +55,7 @@ CreatorTrust provides a minimalist, Google-style search interface to analyze You
 ### 1. Clone and Install
 
 ```bash
-cd /path/to/ytreviews
+cd /path/to/ytchanneltrust
 npm install
 ```
 
@@ -148,7 +148,7 @@ The 5 most recently analyzed channels appear below the search bar for quick re-a
 ## Project Structure
 
 ```
-ytreviews/
+ytchanneltrust/
 ├── src/
 │   ├── app/
 │   │   ├── page.tsx                    # Main search interface

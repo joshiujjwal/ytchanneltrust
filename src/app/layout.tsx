@@ -5,7 +5,7 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'YTReviews - YouTube Channel Trust Ratings',
+  title: 'YTChannelTrust - YouTube Channel Trust Ratings',
   description: 'Trustpilot for YouTube channels. Discover trust scores, sentiment analysis, and metrics for YouTube creators.',
 }
 
