@@ -37,9 +37,16 @@ export function RecentSearchesTableView({
   };
 
   const formatDate = (dateString: string) => {
+    // Handle null, undefined, or empty strings
+    if (!dateString) return 'N/A';
+
     // Ensure we're parsing the date correctly - add 'Z' if not present to force UTC interpretation
     const dateStr = dateString.endsWith('Z') ? dateString : `${dateString}Z`;
     const date = new Date(dateStr);
+
+    // Check if date is valid
+    if (isNaN(date.getTime())) return 'N/A';
+
     const now = new Date();
 
     // Calculate difference using UTC timestamps to avoid timezone issues
