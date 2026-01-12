@@ -52,6 +52,23 @@ export interface YouTubeComment {
 }
 
 export interface ParsedYouTubeURL {
-  type: 'channel' | 'handle' | 'custom' | 'user';
+  type: 'channel' | 'handle' | 'custom' | 'user' | 'video';
   id: string;
+}
+
+export interface YouTubeVideoDetails {
+  id: string;
+  snippet: {
+    title: string;
+    description: string;
+    channelId: string;
+    channelTitle: string;
+    publishedAt: string;
+    tags?: string[];
+    thumbnails: {
+      default: { url: string };
+      medium: { url: string };
+      high: { url: string };
+    };
+  };
 }

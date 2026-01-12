@@ -1,134 +1,121 @@
-# YTReviews - YouTube Channel Trust Ratings
+# CreatorTrust - Objective YouTube Channel Analytics
 
-A Trustpilot-style platform for YouTube channels featuring trust scores, sentiment analysis from comments, and comprehensive channel metrics.
+An objective metadata dashboard for YouTube channels featuring vitality metrics based on concrete, quantifiable signals.
+
+## Overview
+
+CreatorTrust provides a minimalist, Google-style search interface to analyze YouTube channels using objective metrics rather than sentiment or probabilistic scores. Simply paste any YouTube channel or video URL to instantly see comprehensive vitality metrics.
 
 ## Features
 
-- **Trust Score System**: 0-5 star rating based on multiple factors:
-  - Comment sentiment (40%)
-  - Engagement metrics (20%)
-  - Upload consistency (15%)
-  - Channel transparency (15%)
-  - Channel longevity (10%)
+### Vitality Metrics (100% Objective)
 
-- **Sentiment Analysis**: Analyzes YouTube comments using natural language processing
-  - Positive, neutral, and negative comment breakdown
-  - Average sentiment score (-1 to +1)
-  - Based on top videos and recent comments
+- **Consistency Score**: Total Videos / Months since channel creation
+  - Measures upload regularity and content production frequency
 
-- **Channel Metrics**:
-  - Subscriber count
-  - Video count
-  - Total views
-  - Channel age
-  - Country/location
-  - Category
-  - Media house affiliation (if applicable)
+- **Growth Ratio**: Subscribers / Total Videos
+  - Quantifies "value per video" - how many subscribers each video generates on average
 
-- **User Features**:
-  - Browse top 100 YouTube channels
-  - Search channels by name
-  - Add new channels via URL
-  - View detailed channel analytics
+- **Longevity**: Days since the channel was created
+  - Channel age and establishment in the platform
+
+- **Content DNA**: Top 5 most frequent tags from the 10 most recent videos
+  - Reveals the channel's content focus and thematic patterns
+
+### User Experience
+
+- **Google-Style Search**: Minimalist landing page with centered search bar
+- **Universal URL Support**: Accepts all YouTube URL formats:
+  - Channel URLs (`@handle`, `/channel/`, `/c/`, `/user/`)
+  - Video URLs (automatically resolves to parent channel)
+- **Creator Vitality Card**: Professional, data-rich card showing:
+  - Channel identity (logo, title, handle)
+  - The "Big Three": Subscribers, Total Videos, Total Views
+  - Vitality metrics with visual indicators
+  - Content DNA tags
+- **Recent Searches**: Quick access to your 5 most recently analyzed channels
 
 ## Tech Stack
 
-- **Frontend**: Next.js 14 (App Router), React, TypeScript, Tailwind CSS
-- **Backend**: Next.js API Routes, Node.js
-- **Database**: PostgreSQL with Drizzle ORM
+- **Framework**: Next.js 14 (App Router)
+- **Styling**: Tailwind CSS
+- **Database**: Supabase (PostgreSQL)
 - **APIs**: YouTube Data API v3
-- **Sentiment Analysis**: Sentiment.js (lexicon-based)
-- **UI Components**: Custom components inspired by shadcn/ui
+- **UI Components**: Lucide React icons, Sonner (toast notifications)
+- **TypeScript**: Full type safety
 
 ## Prerequisites
 
-Before you begin, ensure you have:
-
 - Node.js 18+ installed
-- PostgreSQL database (local or hosted)
-- YouTube Data API key
+- PostgreSQL database (via Supabase or self-hosted)
+- YouTube Data API key from Google Cloud Console
 
 ## Setup Instructions
 
-### 1. Clone the Repository
+### 1. Clone and Install
 
 ```bash
 cd /path/to/ytreviews
-```
-
-### 2. Install Dependencies
-
-```bash
 npm install
 ```
 
-### 3. Set Up PostgreSQL Database
+### 2. Set Up Supabase
 
-Create a PostgreSQL database:
+#### Option A: Use Supabase Cloud (Recommended)
 
-```bash
-# Using psql
-psql -U postgres
-CREATE DATABASE ytreviews;
-\q
-```
+1. Create a free account at [supabase.com](https://supabase.com)
+2. Create a new project
+3. Go to Settings > API to get your credentials
+4. Copy the `URL` and `anon` public key
 
-Or use a hosted PostgreSQL service like:
-- [Neon](https://neon.tech) (recommended for development)
-- [Supabase](https://supabase.com)
-- [Railway](https://railway.app)
+#### Option B: Self-Host PostgreSQL
 
-### 4. Get YouTube API Key
+Use your own PostgreSQL instance and update connection strings accordingly.
 
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project or select existing one
-3. Enable YouTube Data API v3
-4. Create credentials (API Key)
-5. Copy your API key
+### 3. Configure Environment Variables
 
-### 5. Configure Environment Variables
-
-Edit `.env.local` and add your credentials:
+Create `.env.local`:
 
 ```bash
-# Database
-DATABASE_URL="postgresql://username:password@localhost:5432/ytreviews"
-
 # YouTube API
 YOUTUBE_API_KEY="your_youtube_api_key_here"
+
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL="https://your-project.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="your_anon_key_here"
+
+# Database (for Drizzle ORM)
+DATABASE_URL="postgresql://user:password@host:5432/database"
 
 # App URL
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
 ```
 
-### 6. Set Up Database Schema
+### 4. Get YouTube API Key
 
-Generate and push the database schema:
+1. Visit [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project
+3. Enable **YouTube Data API v3**
+4. Create credentials (API Key)
+5. Restrict the key to YouTube Data API v3 (optional but recommended)
+
+### 5. Set Up Database Schema
+
+Run the database migrations:
 
 ```bash
 npm run db:generate
 npm run db:push
 ```
 
-Or manually create tables using the schema in `src/lib/db/schema.ts`.
+This creates the following tables:
+- `channels` - Channel metadata and vitality metrics
+- `searches` - Recent searches tracking
+- `api_quota_tracking` - YouTube API quota management
 
-### 7. Seed the Database (Optional)
+Or manually create tables in Supabase SQL Editor using the schema from `src/lib/db/schema.ts`.
 
-Populate with top YouTube channels:
-
-```bash
-npm run seed
-```
-
-This will:
-- Fetch data for ~50 top YouTube channels
-- Perform sentiment analysis on the first 20
-- Calculate trust scores
-- Store everything in your database
-
-**Note**: The seed script uses YouTube API quota. It will stop if the daily limit (10,000 units) is reached.
-
-### 8. Start Development Server
+### 6. Start Development Server
 
 ```bash
 npm run dev
@@ -138,116 +125,153 @@ Visit [http://localhost:3000](http://localhost:3000)
 
 ## Usage
 
-### Adding Channels
+### Analyzing Channels
 
-1. Navigate to the home page
-2. Paste a YouTube channel URL in the "Add a YouTube Channel" input
-3. Supported URL formats:
-   - `https://youtube.com/channel/UC...`
-   - `https://youtube.com/@username`
-   - `https://youtube.com/c/CustomName`
-   - `https://youtube.com/user/Username`
-4. Click "Add" - the app will:
-   - Fetch channel data from YouTube
-   - Analyze comment sentiment
-   - Calculate trust score
-   - Add to database
-   - Redirect to channel page
+1. Paste any YouTube URL into the search bar:
+   - Channel: `https://youtube.com/@username`
+   - Channel ID: `https://youtube.com/channel/UCxxxxx`
+   - Video: `https://youtube.com/watch?v=xxxxx` (resolves to channel)
 
-### Searching Channels
+2. Click "Analyze Channel" or press Enter
 
-Use the search bar on the home page to find channels by name.
+3. View the Creator Vitality Card with:
+   - Channel statistics
+   - Vitality metrics
+   - Content DNA tags
 
-### Viewing Channel Details
+4. Click "New Search" to analyze another channel
 
-Click any channel card to view:
-- Trust score with visual rating
-- Detailed statistics
-- Sentiment breakdown
-- Channel description
-- Link to YouTube channel
+### Recent Searches
 
-## API Routes
-
-### GET /api/channels
-List all channels (paginated)
-
-Query parameters:
-- `q` (optional): Search query
-- `limit` (optional): Number of results (default: 100)
-
-### GET /api/channels/[id]
-Get single channel with sentiment data
-
-### POST /api/channels/add
-Add a new channel by URL
-
-Body:
-```json
-{
-  "url": "https://youtube.com/@channelname"
-}
-```
-
-### GET /api/quota
-Get current API quota usage
+The 5 most recently analyzed channels appear below the search bar for quick re-access.
 
 ## Project Structure
 
 ```
 ytreviews/
 ├── src/
-│   ├── app/                    # Next.js App Router
-│   │   ├── page.tsx            # Home page (dashboard)
-│   │   ├── channel/[id]/       # Channel detail page
-│   │   └── api/                # API routes
-│   ├── components/             # React components
-│   │   ├── dashboard/          # Dashboard components
-│   │   ├── channel/            # Channel page components
-│   │   ├── search/             # Search components
-│   │   └── ui/                 # UI primitives
-│   └── lib/                    # Business logic
-│       ├── db/                 # Database (Drizzle ORM)
-│       ├── youtube/            # YouTube API client
-│       ├── sentiment/          # Sentiment analysis
-│       └── utils/              # Utility functions
-├── scripts/                    # Utility scripts
-│   └── seed-top-100.ts         # Database seeding
-└── migrations/                 # Database migrations
+│   ├── app/
+│   │   ├── page.tsx                    # Main search interface
+│   │   └── api/
+│   │       ├── lookup/route.ts         # Channel vitality lookup
+│   │       └── searches/route.ts       # Recent searches management
+│   ├── components/
+│   │   ├── vitality/
+│   │   │   └── VitalityCard.tsx        # Creator Vitality Card
+│   │   └── search/
+│   │       └── RecentSearches.tsx      # Recent searches component
+│   └── lib/
+│       ├── youtube/
+│       │   ├── api.ts                  # YouTube API client
+│       │   ├── parser.ts               # URL parsing
+│       │   └── types.ts                # Type definitions
+│       ├── vitality/
+│       │   └── calculator.ts           # Vitality metrics logic
+│       ├── supabase/
+│       │   └── client.ts               # Supabase client
+│       └── db/
+│           ├── schema.ts               # Database schema
+│           └── queries.ts              # Database queries
+└── migrations/                         # Database migrations
 ```
+
+## API Routes
+
+### POST /api/lookup
+
+Analyzes a YouTube channel from a URL.
+
+**Request Body:**
+```json
+{
+  "url": "https://youtube.com/@channelname"
+}
+```
+
+**Response:**
+```json
+{
+  "channel": {
+    "id": "UCxxxxx",
+    "title": "Channel Name",
+    "handle": "@channelname",
+    "thumbnailUrl": "...",
+    "subscriberCount": 1000000,
+    "videoCount": 500,
+    "viewCount": 50000000
+  },
+  "vitality": {
+    "consistencyScore": 12.5,
+    "consistencyDisplay": "12.50 videos/month",
+    "growthRatio": 2000,
+    "growthRatioDisplay": "2000 subs/video",
+    "longevityDays": 2000,
+    "longevityDisplay": "5.5 years",
+    "contentDna": ["tag1", "tag2", "tag3", "tag4", "tag5"]
+  }
+}
+```
+
+### GET /api/searches
+
+Returns the 5 most recent searches.
+
+### POST /api/searches
+
+Adds a channel to recent searches.
+
+**Request Body:**
+```json
+{
+  "channelId": "UCxxxxx",
+  "title": "Channel Name",
+  "thumbnail": "...",
+  "handle": "@channelname"
+}
+```
+
+## Vitality Algorithm Details
+
+### Consistency Score
+```
+Consistency = Total Videos / Months Since Creation
+```
+Example: 500 videos over 40 months = 12.5 videos/month
+
+### Growth Ratio
+```
+Growth Ratio = Total Subscribers / Total Videos
+```
+Example: 1M subscribers with 500 videos = 2,000 subscribers per video
+
+### Longevity
+```
+Longevity = Current Date - Channel Published Date
+```
+Measured in days and displayed in years for readability.
+
+### Content DNA
+1. Fetch the 10 most recent videos
+2. Extract all tags from these videos
+3. Calculate tag frequency
+4. Return the top 5 most frequent tags
+
+All metrics are purely objective and require no human judgment or AI interpretation.
 
 ## YouTube API Quota Management
 
-The app implements quota tracking to stay within YouTube's daily limit (10,000 units):
+The app tracks YouTube API quota usage:
 
 - **Channel fetch**: 1 unit
-- **Comment fetch**: 1 unit per request
-- **Search**: 100 units per request
+- **Playlist fetch**: 1 unit
+- **Video fetch**: 1 unit per video
+- **Daily limit**: 10,000 units (default)
 
-Features:
-- Quota tracking in database
-- Automatic quota checks before API calls
-- Caching to minimize API usage
-- Graceful degradation when quota is exceeded
-
-## Trust Score Algorithm
-
-Trust scores range from 0-5 and are calculated using weighted factors:
-
-```
-Trust Score =
-  (Sentiment × 0.4) +
-  (Engagement × 0.2) +
-  (Consistency × 0.15) +
-  (Transparency × 0.15) +
-  (Longevity × 0.1)
-```
-
-- **Sentiment**: Based on comment analysis (positive/negative ratio)
-- **Engagement**: Views per subscriber ratio
-- **Consistency**: Upload frequency
-- **Transparency**: Description quality, links, verified info
-- **Longevity**: Channel age
+The vitality lookup uses approximately:
+- 1 unit for channel lookup
+- 1 unit for uploads playlist
+- 1 unit for recent videos (up to 50 IDs per request)
+- **Total**: ~3 units per lookup
 
 ## Development
 
@@ -261,30 +285,32 @@ npm run lint         # Run ESLint
 npm run db:generate  # Generate Drizzle migrations
 npm run db:push      # Push schema to database
 npm run db:studio    # Open Drizzle Studio
-npm run seed         # Seed database with top channels
 ```
 
-### Adding New Channels to Seed Script
+### Adding Features
 
-Edit `scripts/seed-top-100.ts` and add channel IDs to the `TOP_CHANNEL_IDS` array.
+The modular architecture makes it easy to extend:
 
-To find a channel ID:
-1. Visit the channel on YouTube
-2. View page source
-3. Search for `"channelId"` or `"externalId"`
+- **New metrics**: Add calculators in `src/lib/vitality/calculator.ts`
+- **UI components**: Add to `src/components/`
+- **API routes**: Add to `src/app/api/`
 
 ## Deployment
 
 ### Vercel (Recommended)
 
-1. Push your code to GitHub
+1. Push code to GitHub
 2. Import project in Vercel
-3. Set environment variables
+3. Set environment variables:
+   - `YOUTUBE_API_KEY`
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `DATABASE_URL`
 4. Deploy
 
 ### Other Platforms
 
-The app works on any platform that supports Next.js:
+Compatible with any platform supporting Next.js:
 - Railway
 - Render
 - Fly.io
@@ -292,32 +318,40 @@ The app works on any platform that supports Next.js:
 
 ## Troubleshooting
 
-### Database Connection Error
+### "Invalid YouTube URL" Error
 
-Ensure your `DATABASE_URL` is correct and the database exists.
+Ensure the URL is properly formatted. Supported:
+- `youtube.com/@handle`
+- `youtube.com/channel/UCxxxxx`
+- `youtube.com/c/CustomName`
+- `youtube.com/user/Username`
+- `youtube.com/watch?v=xxxxx`
+- `youtu.be/xxxxx`
 
 ### YouTube API Quota Exceeded
 
-Wait until the next day (resets at midnight Pacific Time) or request a quota increase from Google.
+Wait until midnight Pacific Time for quota reset, or request a quota increase from Google.
 
-### Sentiment Analysis Not Working
+### Supabase Connection Error
 
-Check that you have sufficient API quota. Sentiment analysis is quota-intensive (requires fetching comments).
+Verify your `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are correct.
 
-### Missing Environment Variables
+### Database Schema Issues
 
-Make sure `.env.local` exists and contains all required variables.
+Run `npm run db:push` to sync schema changes to the database.
 
 ## Future Enhancements
 
-- User accounts and watchlists
-- Channel comparison tool
-- Historical trust score tracking
-- More advanced sentiment analysis (AI-powered)
-- Comment moderation insights
-- Channel controversy detection
+- Historical tracking of vitality metrics over time
+- Channel comparison tool (side-by-side analysis)
 - Export reports (PDF, CSV)
-- Mobile app
+- Advanced filtering and sorting
+- Channel categorization and rankings
+- API for third-party integrations
+
+## Philosophy
+
+CreatorTrust is built on the principle that objective, quantifiable metrics are more valuable than subjective sentiment analysis. Every metric can be independently verified and is based on publicly available data from the YouTube API.
 
 ## License
 

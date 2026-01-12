@@ -5,6 +5,7 @@ export const channels = pgTable('channels', {
   channelId: text('channel_id').unique().notNull(),
   channelUrl: text('channel_url').notNull(),
   channelName: text('channel_name').notNull(),
+  channelHandle: text('channel_handle'),
   creatorName: text('creator_name'),
   subscriberCount: bigint('subscriber_count', { mode: 'number' }),
   videoCount: integer('video_count'),
@@ -16,14 +17,15 @@ export const channels = pgTable('channels', {
   publishedAt: timestamp('published_at'),
   country: text('country'),
   customUrl: text('custom_url'),
-  trustScore: decimal('trust_score', { precision: 3, scale: 2 }),
-  sentimentScore: decimal('sentiment_score', { precision: 3, scale: 2 }),
+  consistencyScore: decimal('consistency_score', { precision: 5, scale: 2 }),
+  growthRatio: decimal('growth_ratio', { precision: 10, scale: 2 }),
+  longevityDays: integer('longevity_days'),
+  contentDna: text('content_dna').array(),
   lastUpdated: timestamp('last_updated').defaultNow(),
   createdAt: timestamp('created_at').defaultNow(),
   apiQuotaUsed: integer('api_quota_used').default(0),
 }, (table) => ({
   subscriberCountIdx: index('idx_subscriber_count').on(table.subscriberCount),
-  trustScoreIdx: index('idx_trust_score').on(table.trustScore),
   channelIdIdx: index('idx_channel_id').on(table.channelId),
   lastUpdatedIdx: index('idx_last_updated').on(table.lastUpdated),
 }));
@@ -75,4 +77,17 @@ export const userSearches = pgTable('user_searches', {
   createdAt: timestamp('created_at').defaultNow(),
 }, (table) => ({
   createdAtIdx: index('idx_searches_created_at').on(table.createdAt),
+}));
+
+// New table for recent searches feature
+export const searches = pgTable('searches', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  channelId: text('channel_id').notNull(),
+  title: text('title').notNull(),
+  thumbnail: text('thumbnail'),
+  handle: text('handle'),
+  timestamp: timestamp('timestamp').defaultNow().notNull(),
+}, (table) => ({
+  timestampIdx: index('idx_searches_timestamp').on(table.timestamp),
+  channelIdIdx: index('idx_searches_channel_id').on(table.channelId),
 }));

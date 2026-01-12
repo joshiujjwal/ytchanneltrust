@@ -20,6 +20,7 @@ export async function POST(request: NextRequest) {
 
     // Parse the YouTube URL
     const parsed = parseYouTubeURL(url);
+    console.log('[Add Channel] Parsed URL:', { url, parsed });
     if (!parsed) {
       return NextResponse.json(
         { error: 'Invalid YouTube URL format' },
@@ -44,15 +45,24 @@ export async function POST(request: NextRequest) {
     await quotaManager.recordChannelFetch();
 
     if (!channelData) {
+      console.log('[Add Channel] Channel not found on YouTube');
       return NextResponse.json(
         { error: 'Channel not found on YouTube' },
         { status: 404 }
       );
     }
 
+    console.log('[Add Channel] Channel data received:', {
+      id: channelData.id,
+      title: channelData.snippet.title,
+      customUrl: channelData.snippet.customUrl,
+      subscriberCount: channelData.statistics.subscriberCount,
+      originalUrl: url,
+    });
+
     // Extract channel category (simplified - YouTube API doesn't directly provide this)
-    // We could use topic IDs or other methods, but for now, we'll leave it as null
-    const channelCategory = null;
+    // We could use topic IDs or other methods, but for now, we'll leave it as undefined
+    const channelCategory = undefined;
 
     // Perform sentiment analysis (if quota allows)
     let sentimentResult = null;
@@ -91,7 +101,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Save channel to database
-    const channel = await upsertChannel({
+    const channelToSave = {
       channelId: channelData.id,
       channelUrl: url,
       channelName: channelData.snippet.title,
@@ -107,7 +117,16 @@ export async function POST(request: NextRequest) {
       customUrl: channelData.snippet.customUrl,
       trustScore,
       sentimentScore: sentimentResult?.averageSentiment.toFixed(2) || '0.00',
+    };
+
+    console.log('[Add Channel] Saving to database:', {
+      channelId: channelToSave.channelId,
+      channelUrl: channelToSave.channelUrl,
+      channelName: channelToSave.channelName,
+      customUrl: channelToSave.customUrl,
     });
+
+    const channel = await upsertChannel(channelToSave);
 
     return NextResponse.json({
       success: true,
