@@ -101,10 +101,10 @@ export default function Home() {
           {/* Logo and Title */}
           <div className="text-center mb-12">
             <h1 className="text-6xl font-bold text-gray-900 mb-4">
-              Creator<span className="text-blue-600">Trust</span>
+              YTChannel<span className="text-blue-600">Trust</span>
             </h1>
             <p className="text-xl text-gray-600">
-              Objective metadata dashboard for YouTube creators
+              Objective metadata dashboard for YouTube channels, reviews ( coming soon... )
             </p>
           </div>
 
