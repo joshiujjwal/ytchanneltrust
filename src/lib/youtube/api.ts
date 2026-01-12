@@ -53,7 +53,7 @@ export class YouTubeClient {
         const response = await this.youtube.channels.list({
           part: ['snippet', 'statistics', 'contentDetails'],
           forHandle: handle.startsWith('@') ? handle.substring(1) : handle,
-        });
+        } as any);
 
         const channel = (response.data.items?.[0] as YouTubeChannel) || null;
         if (channel) {
