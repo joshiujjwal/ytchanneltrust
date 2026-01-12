@@ -63,7 +63,7 @@ export default function Home() {
 
       setData(result);
 
-      // Add to recent searches
+      // Add to recent searches with YTCT score
       await fetch('/api/searches', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -72,6 +72,10 @@ export default function Home() {
           title: result.channel.title,
           thumbnail: result.channel.thumbnailUrl,
           handle: result.channel.handle,
+          ytctScore: result.ytctScore?.score,
+          ytctRating: result.ytctScore?.rating,
+          subscriberCount: result.channel.subscriberCount,
+          videoCount: result.channel.videoCount,
         }),
       });
 
@@ -88,6 +92,64 @@ export default function Home() {
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleSearch();
+    }
+  };
+
+  const handleRecentSearchClick = async (channelId: string) => {
+    setLoading(true);
+    setError(null);
+    setData(null);
+
+    try {
+      // Try to load from database first
+      const response = await fetch(`/api/channels/${channelId}`);
+
+      if (response.ok) {
+        const dbData = await response.json();
+
+        // Transform database data to VitalityData format
+        const transformedData: VitalityData = {
+          channel: {
+            id: dbData.channel.channelId,
+            title: dbData.channel.channelName,
+            handle: dbData.channel.channelHandle || null,
+            thumbnailUrl: dbData.channel.thumbnailUrl,
+            description: dbData.channel.description || '',
+            subscriberCount: dbData.channel.subscriberCount || 0,
+            videoCount: dbData.channel.videoCount || 0,
+            viewCount: dbData.channel.viewCount || 0,
+            publishedAt: dbData.channel.publishedAt,
+            country: dbData.channel.country || null,
+          },
+          vitality: {
+            consistencyScore: parseFloat(dbData.channel.consistencyScore || '0'),
+            consistencyDisplay: `${dbData.channel.consistencyScore || '0'} videos/month`,
+            growthRatio: parseFloat(dbData.channel.growthRatio || '0'),
+            growthRatioDisplay: `${dbData.channel.growthRatio || '0'} subs/video`,
+            longevityDays: dbData.channel.longevityDays || 0,
+            longevityDisplay: `${((dbData.channel.longevityDays || 0) / 365).toFixed(1)} years`,
+            contentDna: dbData.channel.contentDna || [],
+          },
+        };
+
+        setData(transformedData);
+        toast.success('Channel data loaded from database!');
+      } else {
+        // Fallback to re-analysis if not in database
+        toast.info('Channel not in database, analyzing...');
+        await handleSearch(`https://youtube.com/channel/${channelId}`);
+      }
+    } catch (error) {
+      console.error('Error loading channel:', error);
+      // Fallback to re-analysis on error
+      try {
+        await handleSearch(`https://youtube.com/channel/${channelId}`);
+      } catch (fallbackError) {
+        toast.error('Failed to load channel data');
+        setError('Failed to load channel data');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -144,10 +206,7 @@ export default function Home() {
           </div>
 
           {/* Recent Searches */}
-          <RecentSearches onSearchClick={(channelUrl) => {
-            setUrl(channelUrl);
-            handleSearch(channelUrl);
-          }} />
+          <RecentSearches onSearchClick={handleRecentSearchClick} />
         </div>
       )}
 

@@ -80,11 +80,11 @@ CREATE TABLE IF NOT EXISTS user_searches (
 -- Recent searches table (NEW for CreatorTrust)
 CREATE TABLE IF NOT EXISTS searches (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  channel_id TEXT NOT NULL,
+  channel_id TEXT UNIQUE NOT NULL,
   title TEXT NOT NULL,
   thumbnail TEXT,
   handle TEXT,
-  timestamp TIMESTAMP DEFAULT NOW() NOT NULL
+  timestamp TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 
 -- Create indexes for performance

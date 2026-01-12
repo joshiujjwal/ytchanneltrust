@@ -6,6 +6,7 @@ export interface ChannelInsert {
   channelId: string;
   channelUrl: string;
   channelName: string;
+  channelHandle?: string;
   creatorName?: string;
   subscriberCount?: number;
   videoCount?: number;
@@ -17,8 +18,15 @@ export interface ChannelInsert {
   publishedAt?: Date;
   country?: string;
   customUrl?: string;
+  consistencyScore?: string;
+  growthRatio?: string;
+  longevityDays?: number;
+  contentDna?: string[];
   trustScore?: string;
   sentimentScore?: string;
+  ytctScore?: string;
+  ytctRating?: string;
+  ytctComponents?: string;
 }
 
 export interface SentimentInsert {

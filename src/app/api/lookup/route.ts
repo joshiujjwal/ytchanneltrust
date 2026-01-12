@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getYouTubeClient } from '@/lib/youtube/api';
 import { parseYouTubeURL } from '@/lib/youtube/parser';
 import { calculateVitalityMetrics, formatVitalityMetrics } from '@/lib/vitality/calculator';
+import { calculateYTCTScore } from '@/lib/scoring/ytct-calculator';
+import { upsertChannel } from '@/lib/db/queries';
 
 export async function POST(request: NextRequest) {
   try {
@@ -54,7 +56,47 @@ export async function POST(request: NextRequest) {
 
     const formatted = formatVitalityMetrics(vitalityMetrics);
 
-    // Step 5: Prepare response
+    // Step 5: Calculate YTCT Score
+    const ytctScore = calculateYTCTScore({
+      viewCount: parseInt(channel.statistics.viewCount),
+      subscriberCount: parseInt(channel.statistics.subscriberCount),
+      videoCount: parseInt(channel.statistics.videoCount),
+      publishedAt: channel.snippet.publishedAt,
+      consistencyScore: vitalityMetrics.consistencyScore,
+      growthRatio: vitalityMetrics.growthRatio,
+      longevityDays: vitalityMetrics.longevityDays,
+    });
+
+    // Step 5.5: Save full channel data to database
+    try {
+      await upsertChannel({
+        channelId: channel.id,
+        channelUrl: `https://youtube.com/channel/${channel.id}`,
+        channelName: channel.snippet.title,
+        channelHandle: channel.snippet.customUrl || undefined,
+        subscriberCount: parseInt(channel.statistics.subscriberCount),
+        videoCount: parseInt(channel.statistics.videoCount),
+        viewCount: parseInt(channel.statistics.viewCount),
+        thumbnailUrl: channel.snippet.thumbnails.high.url,
+        description: channel.snippet.description,
+        publishedAt: new Date(channel.snippet.publishedAt),
+        country: channel.snippet.country || undefined,
+        customUrl: channel.snippet.customUrl || undefined,
+        consistencyScore: formatted.consistencyScore,
+        growthRatio: formatted.growthRatio,
+        longevityDays: vitalityMetrics.longevityDays,
+        contentDna: vitalityMetrics.contentDna,
+        ytctScore: ytctScore.score.toString(),
+        ytctRating: ytctScore.rating,
+        ytctComponents: JSON.stringify(ytctScore.components),
+      });
+      console.log('[Lookup API] Channel data saved to database');
+    } catch (dbError) {
+      console.error('[Lookup API] Error saving to database:', dbError);
+      // Continue even if database save fails
+    }
+
+    // Step 6: Prepare response
     const response = {
       channel: {
         id: channel.id,
@@ -76,6 +118,11 @@ export async function POST(request: NextRequest) {
         longevityDays: vitalityMetrics.longevityDays,
         longevityDisplay: `${formatted.longevityYears} years`,
         contentDna: vitalityMetrics.contentDna,
+      },
+      ytctScore: {
+        score: ytctScore.score,
+        rating: ytctScore.rating,
+        components: ytctScore.components,
       },
     };
 

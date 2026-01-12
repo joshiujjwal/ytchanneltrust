@@ -1,4 +1,4 @@
-import { pgTable, text, bigint, integer, timestamp, decimal, uuid, index, date } from 'drizzle-orm/pg-core';
+import { pgTable, text, bigint, integer, timestamp, decimal, uuid, index, date, jsonb } from 'drizzle-orm/pg-core';
 
 export const channels = pgTable('channels', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -24,10 +24,14 @@ export const channels = pgTable('channels', {
   lastUpdated: timestamp('last_updated').defaultNow(),
   createdAt: timestamp('created_at').defaultNow(),
   apiQuotaUsed: integer('api_quota_used').default(0),
+  ytctScore: decimal('ytct_score', { precision: 3, scale: 1 }),
+  ytctRating: text('ytct_rating'),
+  ytctComponents: jsonb('ytct_components'),
 }, (table) => ({
   subscriberCountIdx: index('idx_subscriber_count').on(table.subscriberCount),
   channelIdIdx: index('idx_channel_id').on(table.channelId),
   lastUpdatedIdx: index('idx_last_updated').on(table.lastUpdated),
+  ytctScoreIdx: index('idx_ytct_score').on(table.ytctScore),
 }));
 
 export const comments = pgTable('comments', {
@@ -82,11 +86,11 @@ export const userSearches = pgTable('user_searches', {
 // New table for recent searches feature
 export const searches = pgTable('searches', {
   id: uuid('id').primaryKey().defaultRandom(),
-  channelId: text('channel_id').notNull(),
+  channelId: text('channel_id').unique().notNull(),
   title: text('title').notNull(),
   thumbnail: text('thumbnail'),
   handle: text('handle'),
-  timestamp: timestamp('timestamp').defaultNow().notNull(),
+  timestamp: timestamp('timestamp', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
   timestampIdx: index('idx_searches_timestamp').on(table.timestamp),
   channelIdIdx: index('idx_searches_channel_id').on(table.channelId),

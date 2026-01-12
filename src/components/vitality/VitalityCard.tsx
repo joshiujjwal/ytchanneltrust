@@ -1,4 +1,7 @@
 import { Activity, TrendingUp, Clock, Tag } from 'lucide-react';
+import { YTCTScore } from '@/components/score/YTCTScore';
+import { YTCTScoreBreakdown } from '@/components/score/YTCTScoreBreakdown';
+import { calculateYTCTScore } from '@/lib/scoring/ytct-calculator';
 
 interface VitalityData {
   channel: {
@@ -26,6 +29,17 @@ interface VitalityData {
 
 export function VitalityCard({ data }: { data: VitalityData }) {
   const { channel, vitality } = data;
+
+  // Calculate YTCT Score
+  const ytctResult = calculateYTCTScore({
+    viewCount: channel.viewCount,
+    subscriberCount: channel.subscriberCount,
+    videoCount: channel.videoCount,
+    publishedAt: channel.publishedAt,
+    consistencyScore: vitality.consistencyScore,
+    growthRatio: vitality.growthRatio,
+    longevityDays: vitality.longevityDays,
+  });
 
   const formatNumber = (num: number) => {
     if (num >= 1_000_000) {
@@ -60,6 +74,19 @@ export function VitalityCard({ data }: { data: VitalityData }) {
             >
               View on YouTube →
             </a>
+          </div>
+        </div>
+      </div>
+
+      {/* YTCT Score Section */}
+      <div className="p-8 border-b bg-white">
+        <div className="flex flex-col md:flex-row items-center gap-8">
+          <div className="flex-shrink-0">
+            <YTCTScore score={ytctResult.score} rating={ytctResult.rating} size="lg" />
+          </div>
+          <div className="flex-1 w-full">
+            <h3 className="text-2xl font-bold text-gray-900 mb-4">YTCT Score Breakdown</h3>
+            <YTCTScoreBreakdown components={ytctResult.components} />
           </div>
         </div>
       </div>
