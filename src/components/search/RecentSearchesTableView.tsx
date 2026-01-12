@@ -37,33 +37,44 @@ export function RecentSearchesTableView({
   };
 
   const formatDate = (dateString: string) => {
-    // Handle null, undefined, or empty strings
     if (!dateString) return 'N/A';
 
-    // Ensure we're parsing the date correctly - add 'Z' if not present to force UTC interpretation
-    const dateStr = dateString.endsWith('Z') ? dateString : `${dateString}Z`;
-    const date = new Date(dateStr);
+    const s = dateString.trim();
 
-    // Check if date is valid
-    if (isNaN(date.getTime())) return 'N/A';
+    // Normalize: convert space-separated datetime to ISO 'T' if present
+    const normalized = s.replace(' ', 'T');
+
+    // Detect explicit timezone (Z or +/-HH:MM)
+    const hasTimezone = /(?:Z|[+-]\d{2}:\d{2})$/.test(normalized);
+
+    // If there's a time but no timezone, assume UTC and append 'Z'
+    const needsUtcZ = /\dT\d{2}:\d{2}:\d{2}(?:\.\d+)?$/.test(normalized) && !hasTimezone;
+
+    const iso = needsUtcZ ? `${normalized}Z` : normalized;
+
+    let date = new Date(iso);
+
+    // Fallback: try Date.parse if initial parsing fails
+    if (isNaN(date.getTime())) {
+      const parsed = Date.parse(dateString);
+      if (isNaN(parsed)) return 'N/A';
+      date = new Date(parsed);
+    }
 
     const now = new Date();
-
-    // Calculate difference using UTC timestamps to avoid timezone issues
     const diffMs = now.getTime() - date.getTime();
-    const diffMinutes = Math.floor(diffMs / (1000 * 60));
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-    // Handle negative values (future dates due to clock sync issues)
+    // Handle future timestamps or clock skew
     if (diffMs < 0) return 'Just now';
 
-    // Handle very recent timestamps
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
     if (diffMinutes < 1) return 'Just now';
     if (diffMinutes < 60) return `${diffMinutes} minute${diffMinutes === 1 ? '' : 's'} ago`;
+
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
 
-    // Handle days
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
     if (diffDays === 0) return 'Today';
     if (diffDays === 1) return 'Yesterday';
     if (diffDays < 7) return `${diffDays} days ago`;
